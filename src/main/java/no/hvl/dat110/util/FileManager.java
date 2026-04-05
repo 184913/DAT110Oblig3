@@ -69,33 +69,47 @@ public class FileManager {
      * @param
      * @throws RemoteException 
      */
-    public int distributeReplicastoPeers() throws RemoteException {
-    	
-    	// randomly appoint the primary server to this file replicas
-    	Random rnd = new Random(); 							
-    	int index = rnd.nextInt(Util.numReplicas-1);
-    	
-    	int counter = 0;
-	
-    	// Task1: Given a filename, make replicas and distribute them to all active peers such that: pred < replica <= peer
-    	
-    	// Task2: assign a replica as the primary for this file. Hint, see the slide (project 3) on Canvas
-    	
-    	// create replicas of the filename
-    	
-		// iterate over the replicas
-    	
-    	// for each replica, find its successor (peer/node) by performing findSuccessor(replica)
-    	
-    	// call the addKey on the successor and add the replica
-		
-		// implement a logic to decide if this successor should be assigned as the primary for the file
-    	
-    	// call the saveFileContent() on the successor and set isPrimary=true if logic above is true otherwise set isPrimary=false
-    	
-    	// increment counter
+	public int distributeReplicastoPeers() throws RemoteException {
+
+		Random rnd = new Random();
+		int index = rnd.nextInt(numReplicas);
+
+		int counter = 0;
+
+		createReplicaFiles();
+
+		for (int i = 0; i < numReplicas; i++) {
+
+			BigInteger replicaID = replicafiles[i];
+
+			NodeInterface successor = chordnode.findSuccessor(replicaID);
+
+			// create message (brukes senere i Task 5)
+			Message message = new Message();
+			message.setNodeID(successor.getNodeID());
+			message.setNodeName(successor.getNodeName());
+			message.setHashOfFile(replicaID);
+			message.setNameOfFile(filename);
+			message.setBytesOfFile(bytesOfFile);
+
+			message.setPrimaryServer(i == index);
+
+			// ✅ RIKTIG
+			successor.addKey(replicaID);
+
+			// ✅ RIKTIG
+			successor.saveFileContent(
+					filename,
+					replicaID,
+					bytesOfFile,
+					message.isPrimaryServer()
+			);
+
+			counter++;
+		}
+
 		return counter;
-    }
+	}
 	
 	/**
 	 * 
