@@ -120,20 +120,28 @@ public class FileManager {
 	public Set<Message> requestActiveNodesForFile(String filename) throws RemoteException {
 
 		this.filename = filename;
-		activeNodesforFile = new HashSet<Message>(); 
+		activeNodesforFile = new HashSet<Message>();
 
-		// Task: Given a filename, find all the peers that hold a copy of this file
-		
-		// generate the N replicas from the filename by calling createReplicaFiles()
-		
-		// iterate over the replicas of the file
-		
-		// for each replica, do findSuccessor(replica) that returns successor s.
-		
-		// get the metadata (Message) of the replica from the successor (i.e., active peer) of the file
-		
-		// save the metadata in the set activeNodesforFile.
-		
+		// 1. Lag replicas (setter replicafiles[])
+		createReplicaFiles();
+
+		// 2. Loop gjennom alle replicas
+		for (int i = 0; i < numReplicas; i++) {
+
+			BigInteger replicaID = replicafiles[i];
+
+			// 3. Finn node som eier replica
+			NodeInterface successor = chordnode.findSuccessor(replicaID);
+
+			// 4. Hent metadata fra noden
+			Message msg = successor.getFilesMetadata(replicaID);
+
+			// 5. Legg til hvis ikke null
+			if (msg != null) {
+				activeNodesforFile.add(msg);
+			}
+		}
+
 		return activeNodesforFile;
 	}
 	
@@ -141,19 +149,21 @@ public class FileManager {
 	 * Find the primary server - Remote-Write Protocol
 	 * @return 
 	 */
-	public NodeInterface findPrimaryOfItem() {
+	public NodeInterface findPrimaryOfItem() throws RemoteException {
 
-		// Task: Given all the active peers of a file (activeNodesforFile()), find which is holding the primary copy
-		
 		// iterate over the activeNodesforFile
-		
-		// for each active peer (saved as Message)
-		
-		// use the primaryServer boolean variable contained in the Message class to check if it is the primary or not
-		
-		// return the primary when found (i.e., use Util.getProcessStub to get the stub and return it)
-		
-		return null; 
+		for (Message msg : activeNodesforFile) {
+
+			// check if this node is the primary
+			if (msg.isPrimaryServer()) {
+
+				// return the primary node (stub)
+				return Util.getProcessStub(msg.getNodeName(), msg.getPort());
+			}
+		}
+
+		// if no primary is found
+		return null;
 	}
 	
     /**
