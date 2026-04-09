@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.util.Set;
 import java.util.Timer;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +17,7 @@ import no.hvl.dat110.middleware.Message;
 import no.hvl.dat110.middleware.Node;
 import no.hvl.dat110.rpc.interfaces.NodeInterface;
 import no.hvl.dat110.util.Util;
+import no.hvl.dat110.util.Hash;
 
 /**
  * @author tdoy
@@ -150,30 +152,44 @@ public class ChordProtocols {
 		
 		logger.info("Update of successor and predecessor completed...bye!");
 	}
-	
+
 	public void fixFingerTable() {
-		
+
 		try {
-			logger.info("Fixing the FingerTable for the Node: "+ chordnode.getNodeName());
-	
+			logger.info("Fixing the FingerTable for the Node: " + chordnode.getNodeName());
+
 			// get the finger table from the chordnode (list object)
-			
+			List<NodeInterface> fingers = chordnode.getFingerTable();
+
 			// ensure to clear the current finger table
-			
+			fingers.clear();
+
 			// get the address size from the Hash class. This is the modulus and our address space (2^mbit = modulus)
-			
+			BigInteger addressSize = Hash.addressSize();
+
 			// get the number of bits from the Hash class. Number of bits = size of the finger table
-			
-			// iterate over the number of bits			
-			
-			// compute: k = succ(n + 2^(i)) mod 2^mbit
-			
-			// then: use chordnode to find the successor of k. (i.e., succnode = chordnode.findSuccessor(k))
-			
-			// check that succnode is not null, then add it to the finger table
+			int m = Hash.bitSize();
+
+			BigInteger nodeID = chordnode.getNodeID();
+
+			// iterate over the number of bits
+			for (int i = 0; i < m; i++) {
+
+				// compute: k = succ(n + 2^(i)) mod 2^mbit
+				BigInteger offset = BigInteger.valueOf(2).pow(i);
+				BigInteger k = nodeID.add(offset).mod(addressSize);
+
+				// then: use chordnode to find the successor of k
+				NodeInterface succnode = chordnode.findSuccessor(k);
+
+				// check that succnode is not null, then add it to the finger table
+				if (succnode != null) {
+					fingers.add(succnode);
+				}
+			}
 
 		} catch (RemoteException e) {
-			//
+			logger.error(e.getMessage());
 		}
 	}
 

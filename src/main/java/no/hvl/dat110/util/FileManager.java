@@ -55,21 +55,18 @@ public class FileManager {
 		replicafiles = new BigInteger[N];
 		this.chordnode = chordnode;
 	}
-	
+
 	public void createReplicaFiles() {
-	 	
-		// set a loop where size = numReplicas
-		
-		// replicate by adding the index to filename
-		
-		// hash the replica
-		
-		// store the hash in the replicafiles array.
+
+		for (int i = 0; i < numReplicas; i++) {
+			String replica = filename + i;
+			replicafiles[i] = Hash.hashOf(replica);
+		}
 	}
 	
     /**
      * 
-     * @param bytesOfFile
+     * @param
      * @throws RemoteException 
      */
     public int distributeReplicastoPeers() throws RemoteException {
@@ -238,7 +235,7 @@ public class FileManager {
 		return sizeOfByte;
 	}
 	/**
-	 * @param size the size to set
+	 * @param sizeOfByte the size to set
 	 */
 	public void setSizeOfByte(String sizeOfByte) {
 		this.sizeOfByte = sizeOfByte;
